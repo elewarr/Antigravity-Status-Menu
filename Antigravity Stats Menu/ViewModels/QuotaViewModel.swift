@@ -113,6 +113,7 @@ final class QuotaViewModel {
 
     /// Refresh quota data from local Language Server
     func refresh() async {
+        print("[ViewModel] refresh() called")
         isLoading = true
         error = nil
 
@@ -122,6 +123,7 @@ final class QuotaViewModel {
 
             // Update all state from the response
             quotas = response.toModelQuotas()
+            print("[ViewModel] refresh() got \\(quotas.count) quotas")
             userName = response.userName
             userEmail = response.userEmail
             tierName = response.tierName
@@ -134,12 +136,14 @@ final class QuotaViewModel {
             error = nil
             usedCloudCode = false
         } catch {
+            print("[ViewModel] refresh() error: \\(error)")
             self.error = error.localizedDescription
             isConnected = false
             await service.invalidateConnection()
         }
 
         isLoading = false
+        print("[ViewModel] refresh() complete - isLoading now false")
     }
 
     /// Force refresh by trying Cloud Code API first for truly fresh data

@@ -48,6 +48,15 @@ final class StatusBarController {
                 self?.updateDisplay()
             }
         }
+
+        // Initial update after a short delay to catch first data load
+        // This is a workaround for observation sometimes missing the first update
+        Task { @MainActor [weak self] in
+            // Wait for initial data to likely be loaded
+            try? await Task.sleep(for: .seconds(2))
+            print("[StatusBar] Initial delayed update")
+            self?.updateDisplay()
+        }
     }
 
     /// Observe view model changes using Swift Observation framework
@@ -58,10 +67,16 @@ final class StatusBarController {
             _ = viewModel.quotas
             _ = viewModel.isConnected
             _ = viewModel.isLoading
+            print("[StatusBar] Registered observation - quotas: \(viewModel.quotas.count), connected: \(viewModel.isConnected), loading: \(viewModel.isLoading)")
         } onChange: { [weak self] in
+            print("[StatusBar] onChange triggered")
             // Defer to next runloop to avoid layout recursion
             DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
+                guard let self else {
+                    print("[StatusBar] self is nil in onChange")
+                    return
+                }
+                print("[StatusBar] Calling updateDisplay from observation")
                 self.updateDisplay()
                 // Re-register for next change
                 self.observeViewModel()
@@ -174,6 +189,7 @@ final class StatusBarController {
 
     /// Update the display text for all status items
     func updateDisplay() {
+        print("[StatusBar] updateDisplay called - quotas: \(viewModel.quotas.count)")
         let settings = AppSettings.shared
         for menuItem in settings.menuBarItems {
             updateStatusItemDisplay(id: menuItem.id, item: menuItem)
