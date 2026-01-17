@@ -11,7 +11,7 @@ import Combine
 
 /// Manages multiple NSStatusItems for dynamic menu bar presence
 @MainActor
-final class StatusBarController: ObservableObject {
+final class StatusBarController {
 
     private var statusItems: [UUID: NSStatusItem] = [:]
     private var primaryStatusItem: NSStatusItem?  // Reference to primary item for popup trigger
@@ -43,7 +43,8 @@ final class StatusBarController: ObservableObject {
 
         // Update display periodically (as backup for time-based updates like countdowns)
         updateTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+            guard let self else { return }
+            Task { @MainActor [weak self] in
                 self?.updateDisplay()
             }
         }
@@ -261,15 +262,7 @@ final class StatusBarController: ObservableObject {
         }
     }
 
-    private func iconForPercentage(_ percentage: Double) -> String {
-        if percentage > 50 {
-            return "bolt.fill"
-        } else if percentage > 20 {
-            return "bolt.trianglebadge.exclamationmark.fill"
-        } else {
-            return "bolt.slash.fill"
-        }
-    }
+
 
     private func colorForPercentage(_ percentage: Double) -> NSColor {
         if percentage > 50 {
