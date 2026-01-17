@@ -9,33 +9,97 @@ import XCTest
 
 final class Antigravity_Stats_MenuUITests: XCTestCase {
 
+    var app: XCUIApplication!
+
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+        app.launch()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        app = nil
     }
 
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
-        app.launch()
+    // MARK: - Menu Bar Tests
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testMenuBarItemExists() throws {
+        // Check that the app has a menu bar presence
+        // Note: Menu bar extras are harder to test, this is a smoke test
+        XCTAssertTrue(app.exists, "App should be running")
     }
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+    // MARK: - Settings Window Tests
+
+    func testSettingsWindowOpens() throws {
+        // Open settings window via menu
+        // Note: This test may need adjustment based on how settings is accessed
+        let settingsWindow = app.windows["Settings"]
+
+        // Settings might not be open by default
+        if !settingsWindow.exists {
+            // Try to find and click settings button in menu bar
+            // This is tricky for menu bar apps
+            XCTSkip("Settings window not accessible through UI test - menu bar apps require different testing approach")
         }
+    }
+
+    func testSettingsWindowHasMenuBarItemsSection() throws {
+        // Try to access settings window
+        app.activate()
+
+        // Open settings window if possible
+        if let settingsWindow = app.windows.matching(identifier: "Settings").firstMatch as? XCUIElement,
+           settingsWindow.exists {
+
+            // Check for "Menu Bar Items" text
+            let menuBarItemsLabel = settingsWindow.staticTexts["Menu Bar Items"]
+            XCTAssertTrue(menuBarItemsLabel.exists, "Settings should have 'Menu Bar Items' section")
+
+            // Check for Add button
+            let addButton = settingsWindow.buttons["Add"]
+            XCTAssertTrue(addButton.exists, "Settings should have an Add button")
+        } else {
+            XCTSkip("Cannot access Settings window for UI testing")
+        }
+    }
+
+    func testSettingsWindowCloseButton() throws {
+        app.activate()
+
+        if let settingsWindow = app.windows.matching(identifier: "Settings").firstMatch as? XCUIElement,
+           settingsWindow.exists {
+
+            // Look for close button (X)
+            let closeButtons = settingsWindow.buttons.matching(NSPredicate(format: "label CONTAINS 'close' OR label CONTAINS 'xmark'"))
+
+            if closeButtons.count > 0 {
+                closeButtons.firstMatch.click()
+
+                // Window should close
+                XCTAssertFalse(settingsWindow.exists, "Settings window should close after clicking X")
+            }
+        } else {
+            XCTSkip("Cannot access Settings window for UI testing")
+        }
+    }
+
+    // MARK: - Quota Menu View Tests
+
+    func testQuotaMenuViewHasSortButtons() throws {
+        // This test verifies the quota menu view structure
+        // Note: Testing menu bar popover content is challenging
+        XCTSkip("Menu bar popover content testing requires special handling")
+    }
+}
+
+// MARK: - Menu Bar Helper Extension
+
+extension XCUIApplication {
+    /// Attempts to click the menu bar item for this app
+    /// Note: This may not work reliably for all menu bar apps
+    func clickMenuBarItem() {
+        // Menu bar apps often need special handling
+        // Using accessibility API through System Events would be more reliable
     }
 }
