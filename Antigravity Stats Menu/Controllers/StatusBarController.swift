@@ -61,11 +61,7 @@ final class StatusBarController {
         } onChange: { [weak self] in
             // Defer to next runloop to avoid layout recursion
             DispatchQueue.main.async { [weak self] in
-                guard let self = self, !self.statusItems.isEmpty else {
-                    // Re-register anyway to catch later changes
-                    self?.observeViewModel()
-                    return
-                }
+                guard let self else { return }
                 self.updateDisplay()
                 // Re-register for next change
                 self.observeViewModel()
